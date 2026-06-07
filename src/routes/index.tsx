@@ -1,12 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,24 +15,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type VolumeUnit =
-  | "mL" | "L" | "µL" | "cm³" | "m³"
-  | "US gal" | "UK gal" | "US fl oz" | "UK fl oz";
-
-const UNITS: VolumeUnit[] = ["mL", "L", "µL", "cm³", "m³", "US gal", "UK gal", "US fl oz", "UK fl oz"];
-
-const toMl = (v: number, u: VolumeUnit) => ({
-  mL: v, L: v * 1000, "µL": v / 1000, "cm³": v, "m³": v * 1_000_000,
-  "US gal": v * 3785.411784, "UK gal": v * 4546.09,
-  "US fl oz": v * 29.5735295625, "UK fl oz": v * 28.4130625,
-}[u]);
-
-const fromMl = (m: number, u: VolumeUnit) => ({
-  mL: m, L: m / 1000, "µL": m * 1000, "cm³": m, "m³": m / 1_000_000,
-  "US gal": m / 3785.411784, "UK gal": m / 4546.09,
-  "US fl oz": m / 29.5735295625, "UK fl oz": m / 28.4130625,
-}[u]);
-
 const fmt = (n: number) =>
   Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—";
 
@@ -48,7 +23,6 @@ function Index() {
   const [cLow, setCLow] = useState("");
   const [cDesired, setCDesired] = useState("");
   const [volume, setVolume] = useState("");
-  const [unit, setUnit] = useState<VolumeUnit>("mL");
 
   const result = useMemo(() => {
     const high = parseFloat(cHigh);
@@ -63,18 +37,22 @@ function Index() {
     const partsHigh = desired - lo;
     const partsLow = hi - desired;
     const total = partsHigh + partsLow;
-    const totalMl = toMl(vol, unit);
-    const volHighMl = (totalMl * partsHigh) / total;
+    const volHigh = (vol * partsHigh) / total;
     return {
-      volHigh: fromMl(volHighMl, unit),
-      volLow: fromMl(totalMl - volHighMl, unit),
+      volHigh,
+      volLow: vol - volHigh,
       ratioHigh: partsHigh,
       ratioLow: partsLow,
       strongerIsA: high >= low,
     };
-  }, [cHigh, cLow, cDesired, volume, unit]);
+  }, [cHigh, cLow, cDesired, volume]);
 
-  const clearAll = () => { setCHigh(""); setCLow(""); setCDesired(""); setVolume(""); };
+  const clearAll = () => {
+    setCHigh("");
+    setCLow("");
+    setCDesired("");
+    setVolume("");
+  };
 
   return (
     <main className="min-h-screen px-4 py-8 sm:py-14 flex items-start sm:items-center justify-center">
@@ -98,7 +76,7 @@ function Index() {
                 Dilution made simple
               </h1>
               <p className="mt-1.5 text-sm text-[oklch(0.5_0.02_260)]">
-                Mix two solutions to a target concentration and volume.
+                Mix two solutions to a target concentration and total volume.
               </p>
             </header>
 
@@ -110,20 +88,7 @@ function Index() {
 
               <KeyField label="Desired concentration" suffix="%" value={cDesired} onChange={setCDesired} placeholder="40" />
 
-              <div className="grid grid-cols-[1fr_7.5rem] gap-3">
-                <KeyField label="Total volume" value={volume} onChange={setVolume} placeholder="500" />
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.5_0.02_260)] px-1">Unit</label>
-                  <Select value={unit} onValueChange={(v) => setUnit(v as VolumeUnit)}>
-                    <SelectTrigger className="mac-input h-11 shadow-none border-0 px-3 text-sm font-medium text-[oklch(0.25_0.03_260)]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UNITS.map((u) => (<SelectItem key={u} value={u}>{u}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <KeyField label="Total volume" suffix="mL" value={volume} onChange={setVolume} placeholder="500" />
             </div>
 
             {/* Result */}
@@ -141,9 +106,9 @@ function Index() {
               )}
               {result && !("error" in result) && (
                 <div className="space-y-3.5">
-                  <Row label="Solution A" value={`${fmt(result.volHigh)} ${unit}`} />
+                  <Row label="Solution A" value={`${fmt(result.volHigh)} mL`} />
                   <div className="h-px bg-[oklch(0.92_0.008_250)]" />
-                  <Row label="Solution B" value={`${fmt(result.volLow)} ${unit}`} />
+                  <Row label="Solution B" value={`${fmt(result.volLow)} mL`} />
                   <div className="h-px bg-[oklch(0.92_0.008_250)]" />
                   <Row
                     label="Ratio (A : B)"
