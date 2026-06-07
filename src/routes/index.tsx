@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,13 +15,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A simple, elegant alligation calculator for mixing two solutions to reach a desired concentration and volume.",
-      },
-      { property: "og:title", content: "Alligation Calculator" },
-      {
-        property: "og:description",
-        content:
-          "Mix two solutions to a target concentration. Clean, mobile-friendly dilution math.",
+          "A clean, macOS-inspired alligation calculator for mixing two solutions to reach a desired concentration and volume.",
       },
     ],
   }),
@@ -33,78 +23,25 @@ export const Route = createFileRoute("/")({
 });
 
 type VolumeUnit =
-  | "mL"
-  | "L"
-  | "µL"
-  | "cm³"
-  | "m³"
-  | "US gal"
-  | "UK gal"
-  | "US fl oz"
-  | "UK fl oz";
+  | "mL" | "L" | "µL" | "cm³" | "m³"
+  | "US gal" | "UK gal" | "US fl oz" | "UK fl oz";
 
-const UNITS: VolumeUnit[] = [
-  "mL",
-  "L",
-  "µL",
-  "cm³",
-  "m³",
-  "US gal",
-  "UK gal",
-  "US fl oz",
-  "UK fl oz",
-];
+const UNITS: VolumeUnit[] = ["mL", "L", "µL", "cm³", "m³", "US gal", "UK gal", "US fl oz", "UK fl oz"];
 
-const toMilliLiters = (value: number, unit: VolumeUnit): number => {
-  switch (unit) {
-    case "mL":
-      return value;
-    case "L":
-      return value * 1000;
-    case "µL":
-      return value / 1000;
-    case "cm³":
-      return value;
-    case "m³":
-      return value * 1_000_000;
-    case "US gal":
-      return value * 3785.411784;
-    case "UK gal":
-      return value * 4546.09;
-    case "US fl oz":
-      return value * 29.5735295625;
-    case "UK fl oz":
-      return value * 28.4130625;
-  }
-};
+const toMl = (v: number, u: VolumeUnit) => ({
+  mL: v, L: v * 1000, "µL": v / 1000, "cm³": v, "m³": v * 1_000_000,
+  "US gal": v * 3785.411784, "UK gal": v * 4546.09,
+  "US fl oz": v * 29.5735295625, "UK fl oz": v * 28.4130625,
+}[u]);
 
-const fromMilliLiters = (mL: number, unit: VolumeUnit): number => {
-  switch (unit) {
-    case "mL":
-      return mL;
-    case "L":
-      return mL / 1000;
-    case "µL":
-      return mL * 1000;
-    case "cm³":
-      return mL;
-    case "m³":
-      return mL / 1_000_000;
-    case "US gal":
-      return mL / 3785.411784;
-    case "UK gal":
-      return mL / 4546.09;
-    case "US fl oz":
-      return mL / 29.5735295625;
-    case "UK fl oz":
-      return mL / 28.4130625;
-  }
-};
+const fromMl = (m: number, u: VolumeUnit) => ({
+  mL: m, L: m / 1000, "µL": m * 1000, "cm³": m, "m³": m / 1_000_000,
+  "US gal": m / 3785.411784, "UK gal": m / 4546.09,
+  "US fl oz": m / 29.5735295625, "UK fl oz": m / 28.4130625,
+}[u]);
 
 const fmt = (n: number) =>
-  Number.isFinite(n)
-    ? n.toLocaleString(undefined, { maximumFractionDigits: 4 })
-    : "—";
+  Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—";
 
 function Index() {
   const [cHigh, setCHigh] = useState("");
@@ -118,197 +55,157 @@ function Index() {
     const low = parseFloat(cLow);
     const desired = parseFloat(cDesired);
     const vol = parseFloat(volume);
-
-    if (
-      !Number.isFinite(high) ||
-      !Number.isFinite(low) ||
-      !Number.isFinite(desired) ||
-      !Number.isFinite(vol) ||
-      vol <= 0
-    ) {
-      return null;
-    }
+    if (![high, low, desired, vol].every(Number.isFinite) || vol <= 0) return null;
     if (high === low) return { error: "Concentrations must differ." };
     const [hi, lo] = high > low ? [high, low] : [low, high];
     if (desired < lo || desired > hi)
       return { error: "Desired must be between the two concentrations." };
-
     const partsHigh = desired - lo;
     const partsLow = hi - desired;
     const total = partsHigh + partsLow;
-    const totalMl = toMilliLiters(vol, unit);
+    const totalMl = toMl(vol, unit);
     const volHighMl = (totalMl * partsHigh) / total;
-    const volLowMl = totalMl - volHighMl;
-
     return {
-      volHigh: fromMilliLiters(volHighMl, unit),
-      volLow: fromMilliLiters(volLowMl, unit),
+      volHigh: fromMl(volHighMl, unit),
+      volLow: fromMl(totalMl - volHighMl, unit),
       ratioHigh: partsHigh,
       ratioLow: partsLow,
-      highLabel: high > low ? "A" : "B",
+      strongerIsA: high >= low,
     };
   }, [cHigh, cLow, cDesired, volume, unit]);
 
-  const clearAll = () => {
-    setCHigh("");
-    setCLow("");
-    setCDesired("");
-    setVolume("");
-  };
+  const clearAll = () => { setCHigh(""); setCLow(""); setCDesired(""); setVolume(""); };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto w-full max-w-xl px-5 py-10 sm:py-16">
-        <header className="mb-8 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-            Alligation Calculator
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Mix two solutions to reach a target concentration and volume.
-          </p>
-        </header>
-
-        <section className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field
-              label="Solution A (%)"
-              value={cHigh}
-              onChange={setCHigh}
-              placeholder="e.g. 70"
-            />
-            <Field
-              label="Solution B (%)"
-              value={cLow}
-              onChange={setCLow}
-              placeholder="e.g. 20"
-            />
-          </div>
-
-          <Field
-            label="Desired concentration (%)"
-            value={cDesired}
-            onChange={setCDesired}
-            placeholder="e.g. 40"
-          />
-
-          <div className="grid grid-cols-[1fr_auto] gap-3">
-            <Field
-              label="Total volume"
-              value={volume}
-              onChange={setVolume}
-              placeholder="e.g. 500"
-            />
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs text-muted-foreground">Unit</Label>
-              <Select value={unit} onValueChange={(v) => setUnit(v as VolumeUnit)}>
-                <SelectTrigger className="w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNITS.map((u) => (
-                    <SelectItem key={u} value={u}>
-                      {u}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+    <main className="min-h-screen px-4 py-8 sm:py-14 flex items-start sm:items-center justify-center">
+      <div className="w-full max-w-xl">
+        <div className="mac-panel rounded-2xl overflow-hidden">
+          {/* Title bar */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-[oklch(0.9_0.008_250)] bg-gradient-to-b from-[oklch(0.985_0.003_250)] to-[oklch(0.96_0.008_250)]">
+            <span className="traffic-light bg-[oklch(0.7_0.18_25)]" />
+            <span className="traffic-light bg-[oklch(0.82_0.15_85)]" />
+            <span className="traffic-light bg-[oklch(0.75_0.18_145)]" />
+            <div className="flex-1 text-center text-xs font-medium text-[oklch(0.45_0.02_260)] tracking-tight">
+              Alligation Calculator
             </div>
+            <div className="w-12" />
           </div>
-        </section>
 
-        <Separator className="my-8" />
+          {/* Body */}
+          <div className="p-5 sm:p-7">
+            <header className="mb-6 text-center">
+              <h1 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[oklch(0.2_0.03_260)]">
+                Dilution made simple
+              </h1>
+              <p className="mt-1.5 text-sm text-[oklch(0.5_0.02_260)]">
+                Mix two solutions to a target concentration and volume.
+              </p>
+            </header>
 
-        <section
-          aria-live="polite"
-          className="rounded-lg border bg-card p-5 sm:p-6"
-        >
-          {!result && (
-            <p className="text-sm text-muted-foreground">
-              Enter values above to see the mixture.
-            </p>
-          )}
-          {result && "error" in result && (
-            <p className="text-sm text-destructive">{result.error}</p>
-          )}
-          {result && !("error" in result) && (
             <div className="space-y-4">
-              <ResultRow
-                label={`Solution A`}
-                value={`${fmt(result.volHigh)} ${unit}`}
-              />
-              <ResultRow
-                label={`Solution B`}
-                value={`${fmt(result.volLow)} ${unit}`}
-              />
-              <Separator />
-              <ResultRow
-                label="Ratio (A : B)"
-                value={`${fmt(result.ratioHigh)} : ${fmt(result.ratioLow)}`}
-                muted
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <KeyField label="Solution A" suffix="%" value={cHigh} onChange={setCHigh} placeholder="70" />
+                <KeyField label="Solution B" suffix="%" value={cLow} onChange={setCLow} placeholder="20" />
+              </div>
+
+              <KeyField label="Desired concentration" suffix="%" value={cDesired} onChange={setCDesired} placeholder="40" />
+
+              <div className="grid grid-cols-[1fr_7.5rem] gap-3">
+                <KeyField label="Total volume" value={volume} onChange={setVolume} placeholder="500" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.5_0.02_260)] px-1">Unit</label>
+                  <Select value={unit} onValueChange={(v) => setUnit(v as VolumeUnit)}>
+                    <SelectTrigger className="mac-input h-11 shadow-none border-0 px-3 text-sm font-medium text-[oklch(0.25_0.03_260)]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map((u) => (<SelectItem key={u} value={u}>{u}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-          )}
-        </section>
 
-        <div className="mt-6 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={clearAll}>
-            Clear all
-          </Button>
+            {/* Result */}
+            <div
+              aria-live="polite"
+              className="mt-6 rounded-xl border border-[oklch(0.9_0.008_250)] bg-gradient-to-b from-[oklch(0.99_0.003_250)] to-[oklch(0.965_0.008_250)] p-5 shadow-[0_1px_0_oklch(1_0_0)_inset]"
+            >
+              {!result && (
+                <p className="text-sm text-[oklch(0.5_0.02_260)] text-center">
+                  Enter values to see the mixture.
+                </p>
+              )}
+              {result && "error" in result && (
+                <p className="text-sm text-destructive text-center">{result.error}</p>
+              )}
+              {result && !("error" in result) && (
+                <div className="space-y-3.5">
+                  <Row label="Solution A" value={`${fmt(result.volHigh)} ${unit}`} />
+                  <div className="h-px bg-[oklch(0.92_0.008_250)]" />
+                  <Row label="Solution B" value={`${fmt(result.volLow)} ${unit}`} />
+                  <div className="h-px bg-[oklch(0.92_0.008_250)]" />
+                  <Row
+                    label="Ratio (A : B)"
+                    value={`${fmt(result.ratioHigh)} : ${fmt(result.ratioLow)}`}
+                    muted
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex justify-center">
+              <button onClick={clearAll} className="mac-key px-5 h-9 text-sm font-medium">
+                Clear all
+              </button>
+            </div>
+
+            <p className="mt-6 text-[11px] leading-relaxed text-[oklch(0.55_0.02_260)] text-center">
+              For educational and calculation support only. Does not replace
+              institutional policies or independent clinical judgment.
+            </p>
+          </div>
         </div>
-
-        <p className="mt-10 text-xs leading-relaxed text-muted-foreground">
-          For educational and calculation support only. Does not replace
-          institutional policies or independent clinical judgment.
-        </p>
       </div>
     </main>
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
+function KeyField({
+  label, value, onChange, placeholder, suffix,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; suffix?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input
-        inputMode="decimal"
-        type="number"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.5_0.02_260)] px-1">
+        {label}
+      </label>
+      <div className="mac-input flex items-center h-11 px-3">
+        <input
+          inputMode="decimal"
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent outline-none text-base sm:text-[15px] font-medium text-[oklch(0.2_0.03_260)] placeholder:text-[oklch(0.7_0.015_260)] placeholder:font-normal tabular-nums"
+        />
+        {suffix && (
+          <span className="ml-2 text-sm font-medium text-[oklch(0.55_0.02_260)]">{suffix}</span>
+        )}
+      </div>
     </div>
   );
 }
 
-function ResultRow({
-  label,
-  value,
-  muted,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
+function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span
-        className={
-          muted
-            ? "text-sm font-medium tabular-nums"
-            : "text-lg font-semibold tabular-nums"
-        }
-      >
+      <span className="text-sm text-[oklch(0.5_0.02_260)]">{label}</span>
+      <span className={muted
+        ? "text-sm font-semibold tabular-nums text-[oklch(0.35_0.02_260)]"
+        : "text-lg font-semibold tabular-nums text-[oklch(0.2_0.03_260)]"}>
         {value}
       </span>
     </div>
