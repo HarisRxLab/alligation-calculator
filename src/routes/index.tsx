@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Alligation Calculator" },
+      { title: "Alligation Calculator — Pharmacist's Worksheet" },
       {
         name: "description",
         content:
@@ -90,7 +90,7 @@ function Index() {
                     Compounding · Worksheet
                   </p>
                   <h1 className="mt-1 text-2xl sm:text-3xl font-serif tracking-tight text-[oklch(0.22_0.02_60)]">
-                    Alligation Calculator
+                    Alligation Alternate
                   </h1>
                 </div>
                 <p className="text-xs text-[oklch(0.5_0.02_60)] font-mono">
@@ -163,16 +163,16 @@ function Index() {
             </section>
 
             {/* Footer */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="mt-8 flex items-center justify-between gap-3 flex-wrap">
               <button
                 onClick={clearAll}
-                className="px-4 py-2 rounded-md border border-[oklch(0.75_0.02_60)] bg-[oklch(0.97_0.01_85)] text-xs uppercase tracking-wider font-semibold text-[oklch(0.25_0.02_60)] shadow-sm hover:bg-[oklch(0.95_0.01_85)] hover:border-[oklch(0.6_0.02_60)] active:scale-[0.98] transition-all"
+                className="text-xs uppercase tracking-wider font-semibold text-[oklch(0.4_0.02_60)] hover:text-[oklch(0.22_0.02_60)] transition-colors underline-offset-4 hover:underline"
               >
                 Clear worksheet
               </button>
-              <p className="text-[10px] text-[oklch(0.55_0.02_60)] font-serif italic max-w-xs text-right leading-relaxed">
+              <p className="text-[10px] text-[oklch(0.55_0.02_60)] font-serif italic max-w-xs text-right">
                 For educational and calculation support only. Does not replace institutional policies
-                or independent clinical judgment. <span className="not-italic font-semibold text-[oklch(0.4_0.02_60)]">— Harris Muhammad</span>
+                or independent clinical judgment.
               </p>
             </div>
           </div>
