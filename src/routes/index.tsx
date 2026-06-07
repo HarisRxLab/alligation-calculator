@@ -90,7 +90,7 @@ function Index() {
                     Compounding · Worksheet
                   </p>
                   <h1 className="mt-1 text-2xl sm:text-3xl font-serif tracking-tight text-[oklch(0.22_0.02_60)]">
-                    Alligation Alternate
+                    Alligation Calculator
                   </h1>
                 </div>
                 <p className="text-xs text-[oklch(0.5_0.02_60)] font-mono">
