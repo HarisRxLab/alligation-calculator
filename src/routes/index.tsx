@@ -84,23 +84,9 @@ function Index() {
           <div className="px-5 sm:px-10 pt-8 sm:pt-10 pb-8">
             {/* Header */}
             <header className="border-b border-[oklch(0.85_0.01_85)] pb-5 mb-7">
-              <div className="flex items-baseline justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-[oklch(0.5_0.04_60)] font-semibold">
-                    Compounding · Worksheet
-                  </p>
-                  <h1 className="mt-1 text-2xl sm:text-3xl font-serif tracking-tight text-[oklch(0.22_0.02_60)]">
-                    Alligation Alternate
-                  </h1>
-                </div>
-                <p className="text-xs text-[oklch(0.5_0.02_60)] font-mono">
-                  {new Date().toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "2-digit",
-                  })}
-                </p>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-[oklch(0.22_0.02_60)]">
+                Alligation Calculator
+              </h1>
             </header>
 
             {/* Inputs */}
