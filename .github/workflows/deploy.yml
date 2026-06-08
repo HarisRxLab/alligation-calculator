@@ -32,32 +32,21 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Show build output
-        run: find dist -type f | head -50
-
-      - name: Start server and capture pre-rendered HTML
+      - name: Start server and capture SSR HTML
         run: |
-          # Find the server entry
-          SERVER_FILE=$(find dist/server -name '*.js' | head -1)
-          echo "Server file: $SERVER_FILE"
-          # Start server in background
-          PORT=3000 bun $SERVER_FILE &
+          mkdir -p dist/static
+          # Copy client assets (they already have /alligation-calculator/ base baked in)
+          cp -r dist/client/assets dist/static/assets
+          # Start the SSR server
+          PORT=3000 bun dist/server/server.js &
           SERVER_PID=$!
           sleep 5
-          # Try multiple URLs
-          echo "Trying http://localhost:3000/"
-          HTML=$(curl -s -L http://localhost:3000/ 2>&1)
-          echo "Got $(echo $HTML | wc -c) bytes"
-          echo "First 200 chars: ${HTML:0:200}"
-          # Save the HTML
-          mkdir -p dist/static
-          echo "$HTML" > dist/static/index.html
-          # Copy client assets
-          cp -r dist/client/assets dist/static/assets 2>/dev/null || true
-          # Rewrite asset paths to include base path
-          sed -i 's|/assets/|/alligation-calculator/assets/|g' dist/static/index.html
-          echo "=== Final index.html (first 500 chars) ==="
-          head -c 500 dist/static/index.html
+          # Curl the root path
+          curl -s http://localhost:3000/ -o dist/static/index.html
+          echo "=== HTML size ==="
+          wc -c dist/static/index.html
+          echo "=== First 600 chars ==="
+          head -c 600 dist/static/index.html
           kill $SERVER_PID 2>/dev/null || true
 
       - name: Upload artifact
