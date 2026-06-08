@@ -32,22 +32,34 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Pre-render index.html via server
+      - name: Find and verify output directory
         run: |
-          # Start the server briefly to get the rendered HTML for the root path
-          timeout 10 bun dist/server/server.js &
-          SERVER_PID=$!
-          sleep 3
-          curl -s http://localhost:3000/alligation-calculator/ > dist/client/index.html || \
-          curl -s http://localhost:3000/ > dist/client/index.html || true
-          kill $SERVER_PID 2>/dev/null || true
-          echo "=== Generated index.html ==="
-          head -20 dist/client/index.html || echo "Failed to generate"
+          echo "=== All dist contents ==="
+          find dist -type f | head -40
+          echo "=== Checking for index.html ==="
+          find dist -name "index.html" || echo "No index.html found"
+
+      - name: Determine deploy folder and upload
+        run: |
+          if [ -f dist/public/index.html ]; then
+            echo "Using dist/public"
+            echo "DEPLOY_DIR=dist/public" >> $GITHUB_ENV
+          elif [ -f dist/static/index.html ]; then
+            echo "Using dist/static"
+            echo "DEPLOY_DIR=dist/static" >> $GITHUB_ENV
+          elif [ -f dist/client/index.html ]; then
+            echo "Using dist/client"
+            echo "DEPLOY_DIR=dist/client" >> $GITHUB_ENV
+          else
+            echo "No index.html found in standard dirs, checking all..."
+            find dist -name "index.html"
+            echo "DEPLOY_DIR=dist/client" >> $GITHUB_ENV
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist/client
+          path: ${{ env.DEPLOY_DIR }}
 
   deploy:
     environment:
