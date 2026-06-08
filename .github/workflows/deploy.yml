@@ -35,18 +35,18 @@ jobs:
       - name: Start server and capture SSR HTML
         run: |
           mkdir -p dist/static
-          # Copy client assets (they already have /alligation-calculator/ base baked in)
+          # Copy client assets (base path already baked in by vite.config.ts)
           cp -r dist/client/assets dist/static/assets
           # Start the SSR server
           PORT=3000 bun dist/server/server.js &
           SERVER_PID=$!
           sleep 5
-          # Curl the root path
-          curl -s http://localhost:3000/ -o dist/static/index.html
+          # Follow redirects and curl the correct base path
+          curl -s -L http://localhost:3000/alligation-calculator/ -o dist/static/index.html
           echo "=== HTML size ==="
           wc -c dist/static/index.html
-          echo "=== First 600 chars ==="
-          head -c 600 dist/static/index.html
+          echo "=== First 800 chars ==="
+          head -c 800 dist/static/index.html
           kill $SERVER_PID 2>/dev/null || true
 
       - name: Upload artifact
