@@ -13,7 +13,6 @@ export const getRouter = () => {
     routeTree,
     history: memoryHistory,
     context: { queryClient },
-    scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });
 
