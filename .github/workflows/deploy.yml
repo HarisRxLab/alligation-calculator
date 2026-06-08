@@ -29,11 +29,34 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build SPA with plain Vite
+      - name: Build
+        run: bunx vite build --base /alligation-calculator/ --outDir dist/spa
+
+      - name: Generate index.html from built assets
         run: |
-          bunx vite build --base /alligation-calculator/ --outDir dist/spa
-          echo "=== dist/spa contents ==="
-          find dist/spa -type f | head -20
+          BASE="/alligation-calculator"
+          OUT="dist/spa/client"
+          # Find built JS and CSS files
+          JS=$(ls $OUT/assets/index-*.js 2>/dev/null | head -1 | xargs basename)
+          CSS=$(ls $OUT/assets/styles-*.css 2>/dev/null | head -1 | xargs basename)
+          echo "JS=$JS  CSS=$CSS"
+          cat > $OUT/index.html <<HTML
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Alligation Calculator</title>
+              <link rel="stylesheet" crossorigin href="$BASE/assets/$CSS" />
+            </head>
+            <body>
+              <div id="root"></div>
+              <script type="module" crossorigin src="$BASE/assets/$JS"></script>
+            </body>
+          </html>
+          HTML
+          echo "=== index.html ==="
+          cat $OUT/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
