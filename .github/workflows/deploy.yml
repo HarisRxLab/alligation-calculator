@@ -32,6 +32,41 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: List build output
+        run: |
+          echo "=== dist/ ==="
+          ls -la dist/ || true
+          echo "=== dist/client/ ==="
+          ls -la dist/client/ || true
+          echo "=== dist/client/assets/ ==="
+          ls -la dist/client/assets/ || true
+
+      - name: Generate index.html for static hosting
+        run: |
+          # Find the main JS entry file
+          JS_FILE=$(ls dist/client/assets/index-*.js 2>/dev/null | head -1 | xargs -I{} basename {})
+          CSS_FILE=$(ls dist/client/assets/styles-*.css 2>/dev/null | head -1 | xargs -I{} basename {})
+          echo "JS: $JS_FILE"
+          echo "CSS: $CSS_FILE"
+          cat > dist/client/index.html << EOF
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Alligation Calculator</title>
+              <script>window.__BASE_PATH__ = '/alligation-calculator/';</script>
+              $([ -n "$CSS_FILE" ] && echo "<link rel=\"stylesheet\" href=\"/alligation-calculator/assets/$CSS_FILE\" />" || true)
+            </head>
+            <body>
+              <div id="root"></div>
+              <script type="module" src="/alligation-calculator/assets/$JS_FILE"></script>
+            </body>
+          </html>
+          EOF
+          echo "Generated index.html:"
+          cat dist/client/index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
