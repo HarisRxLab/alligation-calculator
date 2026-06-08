@@ -32,40 +32,17 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: List build output
+      - name: Pre-render index.html via server
         run: |
-          echo "=== dist/ ==="
-          ls -la dist/ || true
-          echo "=== dist/client/ ==="
-          ls -la dist/client/ || true
-          echo "=== dist/client/assets/ ==="
-          ls -la dist/client/assets/ || true
-
-      - name: Generate index.html for static hosting
-        run: |
-          # Find the main JS entry file
-          JS_FILE=$(ls dist/client/assets/index-*.js 2>/dev/null | head -1 | xargs -I{} basename {})
-          CSS_FILE=$(ls dist/client/assets/styles-*.css 2>/dev/null | head -1 | xargs -I{} basename {})
-          echo "JS: $JS_FILE"
-          echo "CSS: $CSS_FILE"
-          cat > dist/client/index.html << EOF
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>Alligation Calculator</title>
-              <script>window.__BASE_PATH__ = '/alligation-calculator/';</script>
-              $([ -n "$CSS_FILE" ] && echo "<link rel=\"stylesheet\" href=\"/alligation-calculator/assets/$CSS_FILE\" />" || true)
-            </head>
-            <body>
-              <div id="root"></div>
-              <script type="module" src="/alligation-calculator/assets/$JS_FILE"></script>
-            </body>
-          </html>
-          EOF
-          echo "Generated index.html:"
-          cat dist/client/index.html
+          # Start the server briefly to get the rendered HTML for the root path
+          timeout 10 bun dist/server/server.js &
+          SERVER_PID=$!
+          sleep 3
+          curl -s http://localhost:3000/alligation-calculator/ > dist/client/index.html || \
+          curl -s http://localhost:3000/ > dist/client/index.html || true
+          kill $SERVER_PID 2>/dev/null || true
+          echo "=== Generated index.html ==="
+          head -20 dist/client/index.html || echo "Failed to generate"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
