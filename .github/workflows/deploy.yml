@@ -29,38 +29,13 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build
-        run: bunx vite build --outDir dist/spa/client
-
-      - name: Generate index.html for static deployment
-        run: |
-          BASE="/alligation-calculator"
-          OUT="dist/spa/client"
-          JS=$(ls $OUT/client/assets/index-*.js 2>/dev/null | head -1 | xargs basename)
-          CSS=$(ls $OUT/client/assets/styles-*.css 2>/dev/null | head -1 | xargs basename)
-          echo "JS=$JS  CSS=$CSS"
-          cat > $OUT/index.html <<HTML
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>Alligation Calculator</title>
-              <link rel="stylesheet" crossorigin href="$BASE/client/assets/$CSS" />
-            </head>
-            <body>
-              <div id="root"></div>
-              <script type="module" crossorigin src="$BASE/client/assets/$JS"></script>
-            </body>
-          </html>
-          HTML
-          echo "=== index.html ==="
-          cat $OUT/index.html
+      - name: Build SPA for static hosting
+        run: bunx vite build --config vite.spa.config.ts
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist/spa/client
+          path: ./dist/spa-static
 
   deploy:
     environment:
