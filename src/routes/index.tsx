@@ -152,7 +152,7 @@ function Index() {
             <div className="mt-8 flex items-center justify-between gap-3 flex-wrap">
               <button
                 onClick={clearAll}
-                className="text-xs uppercase tracking-wider font-semibold text-[oklch(0.4_0.02_60)] hover:text-[oklch(0.22_0.02_60)] transition-colors underline-offset-4 hover:underline"
+                className="text-xs uppercase tracking-wider font-semibold text-[oklch(0.3_0.02_60)] px-4 py-2 rounded-md border border-[oklch(0.78_0.015_60)] bg-[oklch(0.98_0.005_85)] hover:bg-[oklch(0.95_0.01_85)] hover:border-[oklch(0.55_0.04_60)] shadow-sm transition-colors"
               >
                 Clear worksheet
               </button>
@@ -161,6 +161,10 @@ function Index() {
                 or independent clinical judgment.
               </p>
             </div>
+
+            <p className="mt-6 pt-4 border-t border-dotted border-[oklch(0.85_0.01_85)] text-center text-xs font-serif italic text-[oklch(0.5_0.02_60)]">
+              Haris Mohamed K M
+            </p>
           </div>
         </div>
       </div>
